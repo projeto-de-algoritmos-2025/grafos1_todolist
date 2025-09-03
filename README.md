@@ -9,4 +9,4 @@ Para a aplicação dos conhecimentos aprendidos em sala de aula, foi criado o si
 
 ``npm install``
 
-``npm start``
+``npm run dev``
