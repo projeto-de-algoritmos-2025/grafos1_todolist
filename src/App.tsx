@@ -1,44 +1,58 @@
 import { useState } from "react";
 
-function TaskForm({ onAddTask }) {
+function TaskForm({ onAddTask, tasks }) {
   const [name, setName] = useState('');
   const [description, setDescription] = useState('');
+  const [parentId, setParentId] = useState('');
 
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name) return;
-    onAddTask(name, description);
+    
+    onAddTask(name, description, parentId || null);
     setName('');
     setDescription('');
+    setParentId('');
   };
 
   return (
-    <form onSubmit={handleSubmit}>
-      <input 
-        type="text"
-        placeholder="Nome da tarefa" 
-        value={name}
-        onChange={(e) => setName(e.target.value)}
-      />
-      <input 
-        type="text" 
-        placeholder="Descrição"
-        value={description}
-        onChange={(e) => setDescription(e.target.value)}
-      />
-      <button type="submit">Adicionar Tarefa</button>
-    </form>
+    <>
+      <form onSubmit={handleSubmit}>
+        <input 
+          type="text"
+          placeholder="Nome da tarefa" 
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+        />
+        <input 
+          type="text" 
+          placeholder="Descrição"
+          value={description}
+          onChange={(e) => setDescription(e.target.value)}
+        />
+
+        {/* Escolher se a tarefa é principal ou dependente */}
+        <select value={parentId} onChange={(e) => setParentId(e.target.value)}>
+          <option value="">Tarefa Principal</option>
+          {tasks.map(t => (
+            <option key={t.id} value={t.id}>
+              {t.name}
+            </option>
+          ))}
+        </select>
+
+        <button type="submit">Adicionar Tarefa</button>
+      </form>
+    </>
   );
 }
 
-function Task({ task, onToggle }) {
+function Task({ task }) {
   return (
     <div>
-      <h3 style={{ textDecoration: task.isComplete ? "line-through" : "none" }}>{task.name}</h3>
+      <h3>{task.name}</h3>
       <p>{task.description}</p>
-      <button onClick={() => onToggle(task.id)}>
-        {task.isComplete ? "Reabrir" : "Concluir"}
-      </button>
+      <button>Concluir</button>
     </div>
   );
 }
@@ -46,34 +60,27 @@ function Task({ task, onToggle }) {
 function App() {
   const [tasks, setTasks] = useState([]);
 
-  const handleAddTask = (name, description) => {
+  const handleAddTask = (name, description, parentId) => {
     const newTask = {
       id: Date.now(),
       name,
       description,
+      parentId,   // agora guardamos a tarefa pai
       isComplete: false,
     };
-    setTasks(prev => [...prev, newTask]);
+    setTasks(prevTasks => [...prevTasks, newTask]);
   };
 
-  const handleToggleTask = (id) => {
-    setTasks(prev => 
-      prev.map(task => 
-        task.id == id ? { ...task, isComplete: !task.isComplete } : task
-      )
-    )
-  }
-
   return (
-    <div>
+    <>
       <h1>To-Do List</h1>
-      <TaskForm onAddTask={handleAddTask}/>
+      <TaskForm onAddTask={handleAddTask} tasks={tasks}/>
       <div>
         {tasks.map(task => (
-          <Task key={task.id} task={task} onToggle={handleToggleTask}/>
+          <Task key={task.id} task={task}/>
         ))}
       </div>
-    </div>
+    </>
   );
 }
 
