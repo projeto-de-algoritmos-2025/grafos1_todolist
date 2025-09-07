@@ -31,11 +31,14 @@ function TaskForm({ onAddTask }) {
   );
 }
 
-function Task({ task }) {
+function Task({ task, onToggle }) {
   return (
     <div>
-      <h3>{task.name}</h3>
+      <h3 style={{ textDecoration: task.isComplete ? "line-through" : "none" }}>{task.name}</h3>
       <p>{task.description}</p>
+      <button onClick={() => onToggle(task.id)}>
+        {task.isComplete ? "Reabrir" : "Concluir"}
+      </button>
     </div>
   );
 }
@@ -48,9 +51,18 @@ function App() {
       id: Date.now(),
       name,
       description,
+      isComplete: false,
     };
-    setTasks(prevTasks => [...prevTasks, newTask]);
+    setTasks(prev => [...prev, newTask]);
   };
+
+  const handleToggleTask = (id) => {
+    setTasks(prev => 
+      prev.map(task => 
+        task.id == id ? { ...task, isComplete: !task.isComplete } : task
+      )
+    )
+  }
 
   return (
     <div>
@@ -58,7 +70,7 @@ function App() {
       <TaskForm onAddTask={handleAddTask}/>
       <div>
         {tasks.map(task => (
-          <Task key={task.id} task={task}/>
+          <Task key={task.id} task={task} onToggle={handleToggleTask}/>
         ))}
       </div>
     </div>
