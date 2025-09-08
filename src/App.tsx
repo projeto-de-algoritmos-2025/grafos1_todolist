@@ -8,76 +8,72 @@ function TaskForm({ onAddTask, tasks }) {
   const handleSubmit = (e) => {
     e.preventDefault();
     if (!name) return;
-    
+
     onAddTask(name, description, selectedDeps);
     setName('');
     setDescription('');
     setSelectedDeps([]);
   };
 
-  const toogleDependency = (taskId) => {
-    if (selectedDeps.includes(taskId)) {
-      setSelectedDeps(selectedDeps.filter(id => id !== taskId));
-    } else {
-      setSelectedDeps([...selectedDeps, taskId]);
-    }
+  const toggleDependency = (taskId) => {
+    setSelectedDeps((prev) =>
+      prev.includes(taskId)
+        ? prev.filter(id => id !== taskId)
+        : [...prev, taskId]
+    );
   };
 
   return (
-    <>
-      <form onSubmit={handleSubmit}>
-        <input 
-          type="text"
-          placeholder="Nome da tarefa" 
-          value={name}
-          onChange={(e) => setName(e.target.value)}
-        />
-        <input 
-          type="text" 
-          placeholder="Descrição"
-          value={description}
-          onChange={(e) => setDescription(e.target.value)}
-        />
+    <form onSubmit={handleSubmit} style={{ marginBottom: "20px" }}>
+      <input 
+        type="text"
+        placeholder="Nome da tarefa" 
+        value={name}
+        onChange={(e) => setName(e.target.value)}
+      />
+      <input 
+        type="text" 
+        placeholder="Descrição"
+        value={description}
+        onChange={(e) => setDescription(e.target.value)}
+      />
 
-        {/* Escolher se a tarefa é principal ou dependente */}
-        {/* <select value={parentId} onChange={(e) => setParentId(e.target.value)}>
-          <option value="">Tarefa Principal</option>
-          {tasks.map(t => (
-            <option key={t.id} value={t.id}>
-              {t.name}
-            </option>
-          ))}
-        </select> */}
+      <div style={{ marginTop: "10px" }}>
+        <label><strong>Pré-requisitos:</strong></label>
+        {tasks.length === 0 && <p style={{ fontSize: "12px" }}>Nenhuma tarefa disponível</p>}
+        {tasks.map(task => (
+          <div key={task.id}>
+            <label>
+              <input 
+                type="checkbox" 
+                value={task.id}
+                checked={selectedDeps.includes(task.id)}
+                onChange={() => toggleDependency(task.id)}
+              />
+              {task.name}
+            </label>
+          </div>
+        ))}
+      </div>
 
-        <div>
-          <label>Pré-requisitos</label>
-          {tasks.map(task => (
-            <div key={task.id}>
-              <label>
-                <input 
-                  type="checkbox" 
-                  value={task.id}
-                  checked={selectedDeps.includes(task.id)}
-                  onChange={() => toogleDependency(task.id)}
-                />
-                {task.name}
-              </label>
-            </div>
-          ))}
-        </div>
-
-        <button type="submit">Adicionar Tarefa</button>
-      </form>
-    </>
+      <button type="submit" style={{ marginTop: "10px" }}>
+        Adicionar Tarefa
+      </button>
+    </form>
   );
 }
 
 function Task({ task, onToggle, isBlocked, dependencyNames }) {
   return (
-    <div>
-      <h3 style={{ textDecoration: task.isComplete ? "line-through" : "none" }}>{task.name}</h3>
+    <div style={{ border: "1px solid #ccc", padding: "10px", marginTop: "10px" }}>
+      <h3 style={{ textDecoration: task.isComplete ? "line-through" : "none" }}>
+        {task.name}
+      </h3>
       <p>{task.description}</p>
-      <p><strong>Dependências:</strong> {dependencyNames.length > 0 ? dependencyNames : 'Nenhuma'}</p>
+      <p>
+        <strong>Dependências:</strong>{" "}
+        {dependencyNames.length > 0 ? dependencyNames : "Nenhuma"}
+      </p>
       <button 
         onClick={() => onToggle(task.id)} 
         disabled={isBlocked}
@@ -96,13 +92,13 @@ function App() {
       id: Date.now(),
       name,
       description,
-      dependencies,   // agora guardamos a tarefa pai
+      dependencies, // lista de ids
       isComplete: false,
     };
     setTasks(prevTasks => [...prevTasks, newTask]);
   };
 
-    const handleToggleTask = (id) => {
+  const handleToggleTask = (id) => {
     setTasks(prev =>
       prev.map(task =>
         task.id === id
@@ -120,28 +116,32 @@ function App() {
   };
 
   return (
-    <>
+    <div style={{ maxWidth: "600px", margin: "0 auto" }}>
       <h1>To-Do List</h1>
-      <TaskForm onAddTask={handleAddTask} tasks={tasks}/>
+
+      <TaskForm onAddTask={handleAddTask} tasks={tasks} />
+
       <div>
         {tasks.map(task => {
-          const dependencyNames = task.dependencies.map(dependencyId => {
-            const dependecyTask = tasks.find(t => t.id === dependencyId);
-            return dependecyTask.name;
-          }).join(', ');
-          
+          const dependencyNames = task.dependencies
+            .map(depId => {
+              const depTask = tasks.find(t => t.id === depId);
+              return depTask?.name || "Desconhecida";
+            })
+            .join(", ");
+
           return (
             <Task 
-              key={task.id} 
-              task={task} 
-              onToggle={handleToggleTask} 
-              isBlocked={isBlocked(task)} 
+              key={task.id}
+              task={task}
+              onToggle={handleToggleTask}
+              isBlocked={isBlocked(task)}
               dependencyNames={dependencyNames}
             />
           );
         })}
       </div>
-    </>
+    </div>
   );
 }
 
